@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,6 +19,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * Validates the shipped resources without starting a server.
@@ -59,6 +60,12 @@ class ResourceIntegrityTest {
         }
     }
 
+    private static String text(String name) throws IOException {
+        try (InputStream stream = resource(name)) {
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
     @Test
     @DisplayName("plugin.yml describes a loadable plugin")
     void pluginDescriptor() throws IOException {
@@ -78,33 +85,29 @@ class ResourceIntegrityTest {
 
     @Test
     @DisplayName("plugin.yml declares every documented permission")
+    @SuppressWarnings("unchecked")
     void permissions() throws IOException {
-        // Bukkit treats '.' as its path separator, so the dotted permission nodes
-        // load as one nested tree below a single "nexusenchants" section. Walking
-        // that tree is what the plugin descriptor itself does.
-        ConfigurationSection root = yaml("plugin.yml").getConfigurationSection("permissions.nexusenchants");
-        assertNotNull(root, "plugin.yml must declare the NexusEnchants permissions");
-
-        List<String> nodes = new ArrayList<>();
-        nodes.add("nexusenchants.admin");
-        for (String node : List.of("reload", "prices", "rarity", "diagnostics", "database")) {
-            assertNotNull(root.getConfigurationSection(node), "missing permission nexusenchants." + node);
-            nodes.add("nexusenchants." + node);
-        }
-        assertEquals(PERMISSIONS, Set.copyOf(nodes), "every documented permission is declared exactly once");
-        for (String node : List.of("admin", "reload", "prices", "rarity", "diagnostics", "database")) {
-            assertEquals("op", root.getString(node + ".default"), "nexusenchants." + node);
+        // The raw YAML is read instead of YamlConfiguration: Bukkit treats '.' as its
+        // path separator, so dotted permission names would collapse into a nested tree
+        // and the literal keys the server actually registers would be invisible.
+        Map<String, Object> descriptor = new Yaml().load(text("plugin.yml"));
+        Map<String, Object> permissions = (Map<String, Object>) descriptor.get("permissions");
+        assertNotNull(permissions, "plugin.yml must declare permissions");
+        assertEquals(PERMISSIONS, permissions.keySet(), "every documented permission is declared");
+        for (String permission : PERMISSIONS) {
+            Map<String, Object> node = (Map<String, Object>) permissions.get(permission);
+            assertNotNull(node, permission);
+            assertEquals("op", node.get("default"), permission);
         }
 
-        ConfigurationSection admin = root.getConfigurationSection("admin");
-        assertNotNull(admin);
-        ConfigurationSection children = admin.getConfigurationSection("children");
+        Map<String, Object> admin = (Map<String, Object>) permissions.get("nexusenchants.admin");
+        Map<String, Object> children = (Map<String, Object>) admin.get("children");
         assertNotNull(children, "nexusenchants.admin must inherit the other permissions");
-        assertTrue(children.getKeys(false).containsAll(
-                Set.of("reload", "prices", "rarity", "diagnostics", "database")));
-        for (String child : children.getKeys(false)) {
-            assertTrue(children.getBoolean(child), "nexusenchants.admin." + child + " must be granted");
-        }
+        assertEquals(Set.of("nexusenchants.reload", "nexusenchants.prices", "nexusenchants.rarity",
+                        "nexusenchants.diagnostics", "nexusenchants.database"),
+                children.keySet());
+        children.forEach((child, granted) ->
+                assertEquals(Boolean.TRUE, granted, child + " must be granted by nexusenchants.admin"));
     }
 
     @Test

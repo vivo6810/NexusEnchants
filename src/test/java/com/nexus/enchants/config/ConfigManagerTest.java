@@ -50,11 +50,11 @@ class ConfigManagerTest {
         ConfigSnapshot snapshot = config.current();
         assertTrue(snapshot.errors().isEmpty(), "unexpected errors: " + snapshot.errors());
         assertTrue(snapshot.settings().enabled());
-        assertEquals(70, snapshot.pricing().explicitPrice("MENDING", 1).orElse(-1));
-        assertEquals(45, snapshot.pricing().explicitPrice("UNBREAKING", 3).orElse(-1));
-        assertEquals(2, snapshot.villagerRarity().weightOf("MENDING").weight());
-        assertEquals(12, snapshot.villagerRarity().weightOf("UNBREAKING").weight());
-        assertFalse(snapshot.enchanting().weightOf("MENDING").enabled());
+        assertEquals(70, snapshot.pricing().explicitPrice("minecraft:mending", 1).orElse(-1));
+        assertEquals(45, snapshot.pricing().explicitPrice("minecraft:unbreaking", 3).orElse(-1));
+        assertEquals(2, snapshot.villagerRarity().weightOf("minecraft:mending").weight());
+        assertEquals(12, snapshot.villagerRarity().weightOf("minecraft:unbreaking").weight());
+        assertFalse(snapshot.enchanting().weightOf("minecraft:mending").enabled());
         assertEquals(DiscountPolicy.CAP, snapshot.discounts().policy());
         assertEquals(20, snapshot.discounts().maximumDiscountPercentage());
         assertEquals(DatabaseType.SQLITE, snapshot.database().type());
@@ -75,29 +75,29 @@ class ConfigManagerTest {
     @Test
     @DisplayName("P011: a price written by a command is applied immediately and survives a reload")
     void writePriceIsApplied() throws IOException {
-        ConfigSnapshot updated = config.writePrice("MENDING", 1, 99);
-        assertEquals(99, updated.pricing().explicitPrice("MENDING", 1).orElse(-1));
+        ConfigSnapshot updated = config.writePrice("minecraft:mending", 1, 99);
+        assertEquals(99, updated.pricing().explicitPrice("minecraft:mending", 1).orElse(-1));
 
         assertTrue(Files.readString(config.dataFolder().toPath().resolve("pricing.yml"),
                 StandardCharsets.UTF_8).contains("99"));
 
         ConfigSnapshot reloaded = config.reload();
-        assertEquals(99, reloaded.pricing().explicitPrice("MENDING", 1).orElse(-1));
+        assertEquals(99, reloaded.pricing().explicitPrice("minecraft:mending", 1).orElse(-1));
         assertTrue(reloaded.errors().isEmpty(), reloaded.errors().toString());
     }
 
     @Test
     @DisplayName("Rarity weights can be written and reloaded")
     void writeWeights() throws IOException {
-        config.writeVillagerWeight("MENDING", 9, true);
+        config.writeVillagerWeight("minecraft:mending", 9, true);
         assertTrue(plugin.bootstrap().configManager().current()
-                .villagerRarity().weightOf("MENDING").enabled());
-        assertEquals(9, config.reload().villagerRarity().weightOf("MENDING").weight());
+                .villagerRarity().weightOf("minecraft:mending").enabled());
+        assertEquals(9, config.reload().villagerRarity().weightOf("minecraft:mending").weight());
 
-        config.writeEnchantingWeight("MENDING", 4, true);
+        config.writeEnchantingWeight("minecraft:mending", 4, true);
         ConfigSnapshot after = config.reload();
-        assertTrue(after.enchanting().weightOf("MENDING").enabled());
-        assertEquals(4, after.enchanting().weightOf("MENDING").weight());
+        assertTrue(after.enchanting().weightOf("minecraft:mending").enabled());
+        assertEquals(4, after.enchanting().weightOf("minecraft:mending").weight());
     }
 
     @Test
@@ -111,7 +111,7 @@ class ConfigManagerTest {
         ConfigSnapshot snapshot = config.reload();
         assertFalse(snapshot.errors().isEmpty(), "a negative price must be reported");
 
-        OptionalInt resolved = snapshot.pricing().explicitPrice("MENDING", 1);
+        OptionalInt resolved = snapshot.pricing().explicitPrice("minecraft:mending", 1);
         assertTrue(resolved.isEmpty() || resolved.getAsInt() >= 1,
                 "an invalid price must never reach the trade");
     }
@@ -140,7 +140,7 @@ class ConfigManagerTest {
         // starts from validated defaults, but it never exposes an unset state.
         assertNotNull(config.current());
         assertNotNull(config.current().pricing());
-        assertTrue(config.current().pricing().explicitPrice("MENDING", 1).orElse(0) >= 0);
+        assertTrue(config.current().pricing().explicitPrice("minecraft:mending", 1).orElse(0) >= 0);
     }
 
     @Test

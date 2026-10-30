@@ -70,11 +70,12 @@ class VillagerRarityManagerTest {
         }
         assertEquals(0, empty, "the shipped weights always produce a selection");
 
-        double mending = counts.getOrDefault("MENDING", 0) / (double) SAMPLES;
-        double unbreaking = counts.getOrDefault("UNBREAKING", 0) / (double) SAMPLES;
-        assertEquals(2.0D / 14.0D, mending, 0.004D);
-        assertEquals(12.0D / 14.0D, unbreaking, 0.004D);
-        assertEquals(2.0D / 14.0D, manager.probabilityOf("MENDING"), 1.0e-9);
+        // The shipped weights sum to 70 (2+12+10+5+4+12+10+5+7+3).
+        double mending = counts.getOrDefault("minecraft:mending", 0) / (double) SAMPLES;
+        double unbreaking = counts.getOrDefault("minecraft:unbreaking", 0) / (double) SAMPLES;
+        assertEquals(2.0D / 70.0D, mending, 0.004D);
+        assertEquals(12.0D / 70.0D, unbreaking, 0.004D);
+        assertEquals(2.0D / 70.0D, manager.probabilityOf("minecraft:mending"), 1.0e-9);
     }
 
     @Test
@@ -97,7 +98,8 @@ class VillagerRarityManagerTest {
         assertFalse(table.isEmpty());
         Enchantment mending = EnchantmentResolver.resolve("MENDING").orElseThrow();
         assertEquals(2L, table.weightOf(mending));
-        assertEquals(2.0D / 14.0D, table.probabilityOf(mending), 1.0e-9);
+        assertEquals(70L, table.totalWeight(), "the ten configured weights sum to 70");
+        assertEquals(2.0D / 70.0D, table.probabilityOf(mending), 1.0e-9);
         // Only the documented ten enchantments are configured.
         assertEquals(10, table.size());
     }
@@ -112,7 +114,7 @@ class VillagerRarityManagerTest {
                 new Random(1L));
         assertTrue(disabled.select().isEmpty());
         assertTrue(disabled.buildTable(snapshot.get()).isEmpty());
-        assertEquals(0.0D, disabled.probabilityOf("MENDING"));
+        assertEquals(0.0D, disabled.probabilityOf("minecraft:mending"));
     }
 
     @Test
@@ -122,15 +124,25 @@ class VillagerRarityManagerTest {
         Enchantment unconfigured = EnchantmentResolver.resolve("FROST_WALKER").orElseThrow();
         assertEquals(0L, table.weightOf(unconfigured));
         assertEquals(0.0D, table.probabilityOf(unconfigured));
-        assertEquals(0.0D, manager.probabilityOf("FROST_WALKER"));
+        assertEquals(0.0D, manager.probabilityOf("minecraft:frost_walker"));
     }
 
     @Test
-    @DisplayName("Level weights per enchantment are exposed for commands")
+    @DisplayName("Villager level weights fall back to the global level table")
     void levelWeights() {
-        Map<Integer, Integer> mending = manager.levelWeightsFor("MENDING");
-        assertEquals(Map.of(1, 100), mending);
-        assertTrue(manager.levelWeightsFor("UNBREAKING").isEmpty());
+        // The shipped villager file leaves per-enchantment level weights empty, so the
+        // global table decides. It fixes Mending at level I with a weight of 100.
+        Map<Integer, Integer> mending = manager.levelWeightsFor("minecraft:mending");
+        assertTrue(mending.isEmpty(), "no villager-specific override is shipped: " + mending);
+        assertTrue(snapshot.get().levels().hasOverride("minecraft:mending"));
+        assertEquals(Map.of(1, 100),
+                snapshot.get().levels().weightsFor("minecraft:mending"));
+        for (int index = 0; index < 4000; index++) {
+            VillagerRarityManager.Selection selection = manager.select().orElseThrow();
+            if ("minecraft:mending".equals(selection.enchantmentKey())) {
+                assertEquals(1, selection.level(), "the global override forces level I");
+            }
+        }
     }
 
     private ConfigSnapshot withVillagerRarity(VillagerRarityConfig rarity) {

@@ -76,6 +76,9 @@ public final class VillagerRarityManager {
      * @return the eligible table
      */
     public WeightedTable<Enchantment> buildTable(ConfigSnapshot snapshot) {
+        if (!snapshot.villagerRarity().active()) {
+            return WeightedTable.empty();
+        }
         WeightedTable.Builder<Enchantment> builder = WeightedTable.builder();
         for (Enchantment enchantment : EnchantmentResolver.registry()) {
             String key = EnchantmentResolver.keyOf(enchantment);
