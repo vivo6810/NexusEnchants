@@ -100,20 +100,20 @@ class VillagerRarityManagerTest {
         assertEquals(2L, table.weightOf(mending));
         assertEquals(70L, table.totalWeight(), "the ten configured weights sum to 70");
         assertEquals(2.0D / 70.0D, table.probabilityOf(mending), 1.0e-9);
-        // Only the documented ten enchantments are configured.
-        assertEquals(10, table.size());
+        // Only the documented ten enchantments are configured.            assertEquals(10, table.size());
     }
 
     @Test
     @DisplayName("A disabled rarity system yields no selection at all")
     void disabledSystem() {
+        ConfigSnapshot inactive = withVillagerRarity(VillagerRarityConfig.disabled());
         VillagerRarityManager disabled = new VillagerRarityManager(
-                () -> withVillagerRarity(VillagerRarityConfig.disabled()),
+                () -> inactive,
                 new EnchantmentSourceManager(snapshot),
                 new EnchantmentLevelManager(() -> snapshot.get().levels()),
                 new Random(1L));
         assertTrue(disabled.select().isEmpty());
-        assertTrue(disabled.buildTable(snapshot.get()).isEmpty());
+        assertTrue(disabled.buildTable(inactive).isEmpty());
         assertEquals(0.0D, disabled.probabilityOf("minecraft:mending"));
     }
 

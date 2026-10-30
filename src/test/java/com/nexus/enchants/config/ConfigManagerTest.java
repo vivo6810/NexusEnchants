@@ -94,10 +94,15 @@ class ConfigManagerTest {
                 .villagerRarity().weightOf("minecraft:mending").enabled());
         assertEquals(9, config.reload().villagerRarity().weightOf("minecraft:mending").weight());
 
-        config.writeEnchantingWeight("minecraft:mending", 4, true);
+        config.writeEnchantingWeight("minecraft:unbreaking", 44, true);
         ConfigSnapshot after = config.reload();
-        assertTrue(after.enchanting().weightOf("minecraft:mending").enabled());
-        assertEquals(4, after.enchanting().weightOf("minecraft:mending").weight());
+        assertTrue(after.enchanting().weightOf("minecraft:unbreaking").enabled());
+        assertEquals(44, after.enchanting().weightOf("minecraft:unbreaking").weight());
+
+        // Mending is on the shipped exclusion list, which outranks any weight.
+        config.writeEnchantingWeight("minecraft:mending", 4, true);
+        assertFalse(config.reload().enchanting().weightOf("minecraft:mending").enabled(),
+                "an excluded enchantment stays excluded even when weighted");
     }
 
     @Test
