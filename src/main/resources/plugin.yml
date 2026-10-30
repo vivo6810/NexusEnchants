@@ -1,0 +1,38 @@
+name: NexusEnchants
+version: '${version}'
+main: com.nexus.enchants.NexusEnchants
+api-version: '26.3'
+description: Full control over how enchantments are obtained, priced and distributed.
+authors: [NexusEnchants]
+website: https://github.com/nexusenchants/NexusEnchants
+load: POSTWORLD
+commands:
+  vbe:
+    description: NexusEnchants administration command.
+    usage: /vbe help
+    aliases: [nexusenchants]
+permissions:
+  nexusenchants.admin:
+    description: Grants every NexusEnchants permission through inheritance.
+    default: op
+    children:
+      nexusenchants.reload: true
+      nexusenchants.prices: true
+      nexusenchants.rarity: true
+      nexusenchants.diagnostics: true
+      nexusenchants.database: true
+  nexusenchants.reload:
+    description: Allows reloading the NexusEnchants configuration.
+    default: op
+  nexusenchants.prices:
+    description: Allows reading and changing enchanted-book prices.
+    default: op
+  nexusenchants.rarity:
+    description: Allows reading and changing rarity weights.
+    default: op
+  nexusenchants.diagnostics:
+    description: Allows running diagnostics and simulation commands.
+    default: op
+  nexusenchants.database:
+    description: Allows inspecting database status and migrations.
+    default: op

@@ -1,0 +1,170 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.Action
+import org.gradle.api.plugins.quality.Checkstyle
+import org.gradle.api.tasks.testing.Test
+
+/*
+ * NexusEnchants build.
+ *
+ * Every version below is pinned and was verified against its upstream repository.
+ * See docs/DECISIONS.md (ADR-001 .. ADR-012) and INIT.md for the rationale.
+ *
+ * NOTE: This project is compiled and tested exclusively by GitHub Actions.
+ * The development agent must never run a compilation or build task locally.
+ */
+
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'com.gradleup.shadow' version '9.6.1'
+}
+
+group = 'com.nexus.enchants'
+version = (findProperty('projectVersion') ?: '0.1.0').toString()
+
+ext {
+    // MockBukkit 4.119.0 reports 'Paper-Version: 26.3.build.200-stable' in its
+    // manifest. The API is pinned to that exact build so the mock server and the
+    // compile-time API cannot drift apart.
+    paperApiVersion = '26.3.build.200-stable'
+    junitVersion = '6.1.3'
+    mockBukkitVersion = '4.119.0'
+    hikariVersion = '7.1.0'
+    sqliteVersion = '3.54.1.0'
+    mysqlConnectorVersion = '9.7.0'
+    slf4jVersion = '2.0.20'
+    checkstyleVersion = '14.3.0'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'papermc'
+        url = uri('https://repo.papermc.io/repository/maven-public/')
+    }
+}
+
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
+
+    implementation "com.zaxxer:HikariCP:${hikariVersion}"
+    implementation "org.xerial:sqlite-jdbc:${sqliteVersion}"
+    implementation "com.mysql:mysql-connector-j:${mysqlConnectorVersion}"
+
+    testImplementation "io.papermc.paper:paper-api:${paperApiVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testImplementation "org.mockbukkit.mockbukkit:mockbukkit-v26.3:${mockBukkitVersion}"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:${junitVersion}"
+    // HikariCP logs through SLF4J. The server provides the binding at runtime;
+    // tests need one on the classpath.
+    testRuntimeOnly "org.slf4j:slf4j-api:${slf4jVersion}"
+    testRuntimeOnly "org.slf4j:slf4j-simple:${slf4jVersion}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+    options.compilerArgs += ['-Xlint:all', '-Xlint:-processing', '-Xlint:-serial']
+}
+
+processResources {
+    // plugin.yml carries ${version} so the descriptor and the jar always agree.
+    inputs.property 'version', project.version
+    filesMatching('plugin.yml') {
+        expand(version: project.version)
+    }
+}
+
+jar {
+    // The shaded jar is the distributed artifact; the thin jar is internal only.
+    archiveClassifier = 'plain'
+    manifest {
+        attributes(
+            'Implementation-Title': 'NexusEnchants',
+            'Implementation-Version': project.version
+        )
+    }
+}
+
+tasks.named('shadowJar', ShadowJar) {
+    archiveBaseName = 'NexusEnchants'
+    archiveClassifier = ''
+    // HikariCP is relocated to avoid clashing with another plugin that bundles it.
+    // The JDBC drivers stay unrelocated: their native libraries and
+    // META-INF/services/java.sql.Driver descriptors must keep working.
+    relocate('com.zaxxer.hikari', 'com.nexus.enchants.libs.hikari', {} as Action)
+    mergeServiceFiles('META-INF/services')
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/maven/**'
+    manifest {
+        attributes(
+            'Implementation-Title': 'NexusEnchants',
+            'Implementation-Version': project.version
+        )
+    }
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('shadowJar')
+}
+
+checkstyle {
+    toolVersion = project.ext.checkstyleVersion
+    configFile = file('config/checkstyle/checkstyle.xml')
+    maxWarnings = 0
+    maxErrors = 0
+    ignoreFailures = false
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+tasks.named('test', Test) {
+    description = 'Runs unit, database and MockBukkit integration tests.'
+    useJUnitPlatform {
+        excludeTags 'statistical'
+    }
+    testLogging {
+        events 'failed', 'skipped'
+        exceptionFormat 'full'
+    }
+    maxHeapSize = '1536m'
+    systemProperty 'file.encoding', 'UTF-8'
+}
+
+def statisticalTest = tasks.register('statisticalTest', Test) {
+    description = 'Runs the 1,000,000-iteration distribution tests (chi-square goodness of fit).'
+    group = 'verification'
+    useJUnitPlatform {
+        includeTags 'statistical'
+    }
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+        exceptionFormat 'full'
+    }
+    maxHeapSize = '1536m'
+}
+
+tasks.named('check') {
+    dependsOn statisticalTest
+}
+
+// Reproducible archives: fixed order and timestamps inside the jar.
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}

@@ -1,0 +1,63 @@
+# ---------------------------------------------------------------------------
+# NexusEnchants - general settings
+#
+# Every value in this file is validated on load and on /vbe reload.
+# Invalid values are reported in the console and by /vbe diagnostics; the
+# affected feature falls back to the documented default instead of guessing.
+# ---------------------------------------------------------------------------
+
+settings:
+  # Language used for command output. Only "en" ships with the plugin.
+  language: en
+
+  # When false the plugin starts but never touches villager trades or
+  # enchanting results. Useful for isolating a configuration problem.
+  enabled: true
+
+  # Verbose startup diagnostics (resolved enchantments, weights, prices).
+  verbose-startup: false
+
+  # Number of enchantment books a librarian may offer. Vanilla uses 2.
+  # Values above 2 are only applied to newly generated traders.
+  librarian-book-trades: 2
+
+  # Statistics are aggregated in memory and flushed to SQL periodically.
+  statistics:
+    enabled: true
+    flush-interval-seconds: 300
+
+  # Audit records are written asynchronously for administrative changes.
+  audit:
+    enabled: true
+
+  # Bounded worker pool used for every JDBC operation.
+  # Queries never run on the server thread.
+  async:
+    worker-threads: 2
+    queue-capacity: 512
+
+database:
+  # SQLITE (default) or MYSQL. MySQL also accepts MariaDB servers.
+  type: SQLITE
+
+  sqlite:
+    file: nexusenchants.db
+    options:
+      foreign-keys: true
+      busy-timeout: 5000
+      journal-mode: WAL
+
+  connection-pool:
+    maximum-size: 5
+
+  mysql:
+    host: localhost
+    port: 3306
+    database: nexusenchants
+    username: nexus_user
+    password: CHANGE_ME
+    ssl: false
+    pool:
+      maximum-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000

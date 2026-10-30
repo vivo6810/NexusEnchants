@@ -1,0 +1,54 @@
+# ---------------------------------------------------------------------------
+# NexusEnchants - enchantment acquisition sources
+#
+# Every source can be enabled or disabled per enchantment. Only sources
+# controlled by a supported Paper event are enforced; see
+# docs/API_COMPATIBILITY.md for the full list of enforced and unsupported
+# sources.
+#
+# Sources:
+#   villager         - librarian enchanted-book trades
+#   enchanting-table - enchanting table results
+#   loot             - loot table generation (chests, structures, mob drops)
+#   fishing          - fishing treasure
+# ---------------------------------------------------------------------------
+
+enchantment-sources:
+  enabled: true
+
+  # Applied to enchantments that are not listed below.
+  default:
+    villager: true
+    enchanting-table: true
+    loot: true
+    fishing: true
+
+  MENDING:
+    villager: true
+    enchanting-table: false
+    loot: true
+    fishing: true
+
+  SILK_TOUCH:
+    villager: true
+    enchanting-table: true
+    loot: true
+    fishing: true
+
+  FORTUNE:
+    villager: true
+    enchanting-table: true
+    loot: true
+    fishing: true
+
+  FROST_WALKER:
+    villager: false
+    enchanting-table: false
+    loot: true
+    fishing: false
+
+  SOUL_SPEED:
+    villager: false
+    enchanting-table: false
+    loot: true
+    fishing: false

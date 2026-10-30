@@ -1,0 +1,75 @@
+# ---------------------------------------------------------------------------
+# NexusEnchants - villager enchanted-book rarity
+#
+# When enabled, every enchanted book a librarian generates is produced by the
+# weighted table below instead of the vanilla enchantment list. Weights are
+# relative: weight 2 versus weight 12 means the second book is six times more
+# likely. A weight of 0 or `enabled: false` removes an enchantment entirely.
+# ---------------------------------------------------------------------------
+
+villager-rarity:
+  enabled: true
+
+  # WEIGHTED  - use the weights below
+  # DISABLED  - leave vanilla generation untouched
+  selection-mode: WEIGHTED
+
+  # When every weight is zero the plugin refuses to start this system and
+  # reports a validation error rather than generating arbitrary trades.
+  enchantments:
+    MENDING:
+      enabled: true
+      weight: 2
+
+    UNBREAKING:
+      enabled: true
+      weight: 12
+
+    EFFICIENCY:
+      enabled: true
+      weight: 10
+
+    FORTUNE:
+      enabled: true
+      weight: 5
+
+    SILK_TOUCH:
+      enabled: true
+      weight: 4
+
+    SHARPNESS:
+      enabled: true
+      weight: 12
+
+    PROTECTION:
+      enabled: true
+      weight: 10
+
+    LOOTING:
+      enabled: true
+      weight: 5
+
+    FEATHER_FALLING:
+      enabled: true
+      weight: 7
+
+    THORNS:
+      enabled: true
+      weight: 3
+
+  # Treasure enchantments (Mending, Frost Walker, Soul Speed, ...) may only be
+  # generated when this is true. Individual enchantments are still controlled
+  # by their weight entry above.
+  treasure-enchantments:
+    enabled: true
+
+  # Canonical keys that are never generated, regardless of their weight.
+  disabled-enchantments: []
+
+  # Optional per-level rarity. Levels listed here replace the global
+  # enchantment-levels table for villager generation only.
+  #
+  # level-weights:
+  #   MENDING:
+  #     level-1: 100
+  level-weights: {}

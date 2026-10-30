@@ -1,0 +1,77 @@
+# ---------------------------------------------------------------------------
+# NexusEnchants - villager enchanted-book pricing
+#
+# Prices are the TOTAL number of emeralds required for one book.
+# A vanilla merchant screen has two input slots of 64 items each, so the
+# hard ceiling for a single trade is 128 emeralds (see `limits.maximum`).
+# Prices above 64 are paid with a split emerald payment (64 + remainder).
+#
+# Enchantment keys accept the vanilla name (MENDING), the namespaced key
+# (minecraft:mending) or the legacy "Mending" spelling.
+# Levels that are not listed fall back to `fallback` when it is enabled.
+# ---------------------------------------------------------------------------
+
+pricing:
+  MENDING:
+    1: 70
+
+  UNBREAKING:
+    1: 20
+    2: 30
+    3: 45
+
+  EFFICIENCY:
+    1: 10
+    2: 18
+    3: 27
+    4: 40
+    5: 55
+
+  SHARPNESS:
+    1: 10
+    2: 18
+    3: 27
+    4: 38
+    5: 50
+
+  PROTECTION:
+    1: 10
+    2: 18
+    3: 28
+    4: 45
+
+  FORTUNE:
+    1: 20
+    2: 35
+    3: 50
+
+  SILK_TOUCH:
+    1: 40
+
+  LOOTING:
+    1: 15
+    2: 30
+    3: 45
+
+  FEATHER_FALLING:
+    1: 10
+    2: 18
+    3: 27
+    4: 35
+
+  THORNS:
+    1: 15
+    2: 25
+    3: 40
+
+fallback:
+  # Used for enchantment/level pairs that have no explicit price.
+  enabled: true
+  price: 40
+
+limits:
+  # A price below this is clamped up, a price above is rejected at load time.
+  minimum: 1
+  maximum: 128
+  # Allow a configured price of 0 (free books). Off by default.
+  allow-zero: false

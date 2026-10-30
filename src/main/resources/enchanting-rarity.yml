@@ -1,0 +1,77 @@
+# ---------------------------------------------------------------------------
+# NexusEnchants - enchanting table rarity
+#
+# Controls the enchantment AND the level that the enchanting table produces.
+# Both the preview offers (PrepareItemEnchantEvent) and the applied result
+# (EnchantItemEvent) are rewritten, so the displayed offer matches the result.
+#
+# XP levels and lapis are never changed: the vanilla cost of the clicked slot
+# is preserved.
+# ---------------------------------------------------------------------------
+
+enchanting-table:
+  enabled: true
+
+  # WEIGHTED - use the weights below
+  # DISABLED - leave vanilla enchanting untouched
+  rarity-mode: WEIGHTED
+
+  treasure-enchantments:
+    # When false, treasure enchantments (Mending, Frost Walker, Soul Speed, ...)
+    # can never come out of an enchanting table.
+    enabled: false
+
+  multiple-enchantments:
+    enabled: true
+    # Percentage chance (0-100) that a second enchantment is added.
+    chance: 15
+    # Never exceed this many enchantments in one result.
+    maximum: 3
+    # Minimum and maximum level of the additional enchantments.
+    minimum-level: 1
+    maximum-level: 3
+
+  # Enchantments that must never be produced by the table even if weighted.
+  excluded-enchantments:
+    - MENDING
+
+  enchantment-weights:
+    MENDING:
+      enabled: false
+      weight: 0
+
+    UNBREAKING:
+      enabled: true
+      weight: 35
+
+    EFFICIENCY:
+      enabled: true
+      weight: 40
+
+    FORTUNE:
+      enabled: true
+      weight: 8
+
+    SILK_TOUCH:
+      enabled: true
+      weight: 5
+
+    SHARPNESS:
+      enabled: true
+      weight: 40
+
+    PROTECTION:
+      enabled: true
+      weight: 35
+
+    LOOTING:
+      enabled: true
+      weight: 8
+
+    FEATHER_FALLING:
+      enabled: true
+      weight: 15
+
+    THORNS:
+      enabled: true
+      weight: 5

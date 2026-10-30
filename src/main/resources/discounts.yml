@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------------
+# NexusEnchants - discount policy
+#
+# PRESERVE - vanilla Minecraft decides the final price. The configured price is
+#            only the base value the vanilla rules are applied to.
+# DISABLE  - vanilla discounts are switched off; the player always pays the
+#            configured price.
+# CAP      - vanilla discounts are switched off and the plugin re-applies the
+#            discounts it can observe, never exceeding the configured cap.
+# ---------------------------------------------------------------------------
+
+discounts:
+  policy: CAP
+
+  maximum-discount-percentage: 20
+
+  # Hero of the Village is readable from the Paper API and is re-applied under CAP.
+  hero-of-the-village: true
+  # Percentage granted per Hero of the Village level (vanilla uses 5).
+  hero-of-the-village-percentage-per-level: 5
+
+  # Cured-villager and gossip reputation discounts cannot be read or recomputed
+  # through the Paper 26.3 API. Under CAP/DISABLE they are suppressed together
+  # with all other vanilla discounts; these flags are recorded and reported by
+  # /vbe diagnostics. Use policy PRESERVE to keep the vanilla behaviour.
+  curing-discounts: true
+  reputation-discounts: true
