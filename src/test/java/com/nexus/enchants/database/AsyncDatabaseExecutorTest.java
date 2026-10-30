@@ -70,7 +70,7 @@ class AsyncDatabaseExecutorTest {
         try (AsyncDatabaseExecutor executor = new AsyncDatabaseExecutor(1, 16, LOGGER)) {
             CountDownLatch blocker = new CountDownLatch(1);
             CountDownLatch started = new CountDownLatch(1);
-            assertTrue(executor.submit("blocker", (AsyncDatabaseExecutor.SqlTask) () -> {
+            assertTrue(executor.submitSql("blocker", () -> {
                 started.countDown();
                 try {
                     blocker.await(5, TimeUnit.SECONDS);
@@ -105,7 +105,7 @@ class AsyncDatabaseExecutorTest {
     void failuresAreHandled() throws Exception {
         try (AsyncDatabaseExecutor executor = new AsyncDatabaseExecutor(1, 16, LOGGER)) {
             CountDownLatch done = new CountDownLatch(2);
-            executor.submit("sql-failure", (AsyncDatabaseExecutor.SqlTask) () -> {
+            executor.submitSql("sql-failure", () -> {
                 done.countDown();
                 throw new SQLException("synthetic failure");
             });

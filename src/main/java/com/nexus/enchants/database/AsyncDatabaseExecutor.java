@@ -91,19 +91,21 @@ public final class AsyncDatabaseExecutor implements AutoCloseable {
      * @return {@code true} when the task was accepted
      */
     public boolean submit(String label, Runnable task) {
-        // The cast is required: Runnable and SqlTask have the same shape, so an
-        // untyped lambda call would be ambiguous.
-        return submit(label, (SqlTask) task::run);
+        return submitSql(label, task::run);
     }
 
     /**
-     * Submits a JDBC task.
+     * Submits a JDBC task that may throw {@link SQLException}.
+     *
+     * <p>The distinct name keeps untyped lambdas unambiguous: {@link Runnable}
+     * and {@link SqlTask} have the same shape, so a second overload called
+     * {@code submit} would make every lambda call site a compile error.</p>
      *
      * @param label short label used in log messages
      * @param task  task to run
      * @return {@code true} when the task was accepted
      */
-    public boolean submit(String label, SqlTask task) {
+    public boolean submitSql(String label, SqlTask task) {
         submitted.incrementAndGet();
         try {
             executor.execute(() -> runGuarded(label, task));

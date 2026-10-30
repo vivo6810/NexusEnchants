@@ -165,6 +165,15 @@ public final class DatabaseManager implements AutoCloseable {
     }
 
     /**
+     * Returns the configured database type.
+     *
+     * @return the database type
+     */
+    public DatabaseType type() {
+        return config.type();
+    }
+
+    /**
      * Returns whether the database is open and migrated.
      *
      * @return {@code true} when queries may run

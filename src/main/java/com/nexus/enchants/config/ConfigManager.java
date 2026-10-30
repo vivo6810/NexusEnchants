@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -170,13 +171,32 @@ public final class ConfigManager {
             }
         }
         try {
-            return YamlConfiguration.loadConfiguration(file);
+            return readYaml(file);
         } catch (IOException | InvalidConfigurationException exception) {
             issues.add(ConfigValidator.error(name, "<file>", "could not be parsed (" + exception.getMessage()
                     + "); the bundled defaults are used for this file until it is repaired"));
             logger.log(Level.SEVERE, "Failed to read " + name, exception);
             return bundledDefaults(name, issues);
         }
+    }
+
+    /**
+     * Parses a YAML file and reports malformed content to the caller.
+     *
+     * <p>{@code YamlConfiguration.loadConfiguration(File)} swallows parse
+     * failures and returns an empty configuration, which would hide a broken
+     * file behind default gameplay values. Reading the file and parsing it with
+     * {@code loadFromString} keeps the failure visible.</p>
+     *
+     * @param file file to read
+     * @return the parsed configuration
+     * @throws IOException                   when the file cannot be read
+     * @throws InvalidConfigurationException when the content is not valid YAML
+     */
+    private YamlConfiguration readYaml(File file) throws IOException, InvalidConfigurationException {
+        YamlConfiguration configuration = new YamlConfiguration();
+        configuration.loadFromString(Files.readString(file.toPath(), StandardCharsets.UTF_8));
+        return configuration;
     }
 
     private YamlConfiguration bundledDefaults(String name, List<ConfigIssue> issues) {
@@ -555,7 +575,7 @@ public final class ConfigManager {
             plugin.saveResource(name, false);
         }
         try {
-            return YamlConfiguration.loadConfiguration(file);
+            return readYaml(file);
         } catch (InvalidConfigurationException exception) {
             throw new IOException("Cannot update " + name + " because it is not valid YAML", exception);
         }
