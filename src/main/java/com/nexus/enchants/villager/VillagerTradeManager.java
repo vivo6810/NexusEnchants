@@ -337,7 +337,7 @@ public final class VillagerTradeManager implements Listener {
                 selection.level());
         TradeRecord trade = TradeRecord.create(villager.getUniqueId(), tradeKey, selection.enchantmentKey(),
                 selection.level(), priced.finalPrice(), uses, maxUses, now);
-        database.executor().submit("register-villager", () -> {
+        database.executor().submitSql("register-villager", () -> {
             database.villagers().upsert(record);
             database.trades().upsert(trade);
         });
@@ -407,7 +407,7 @@ public final class VillagerTradeManager implements Listener {
                 now);
         cache.markManaged(record);
         if (database.isReady()) {
-            database.executor().submit("register-existing", () -> database.villagers().upsert(record));
+            database.executor().submitSql("register-existing", () -> database.villagers().upsert(record));
         }
     }
 

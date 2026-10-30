@@ -312,7 +312,7 @@ public final class PluginBootstrap {
         if (drained.isEmpty()) {
             return;
         }
-        boolean accepted = database.executor().submit("flush-statistics",
+        boolean accepted = database.executor().submitSql("flush-statistics",
                 () -> database.statistics().addCounts(drained, System.currentTimeMillis()));
         if (!accepted) {
             logger.fine("Statistics flush rejected because the database queue is full; counts stay in memory.");
