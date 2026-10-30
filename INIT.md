@@ -212,22 +212,25 @@ ADR-012  Statistical verification is a separate test category (`statisticalTest`
 | Permissions | IMPLEMENTED | `nexusenchants.*` in plugin.yml and `Permissions` |
 | Public API | IMPLEMENTED | `NexusEnchantsApi` 1.0.0 |
 | Diagnostics | IMPLEMENTED | `/vbe diagnostics`, degraded-state reporting |
-| Unit tests | WRITTEN | 127 test methods across 14 classes; **not executed** |
-| Integration tests | WRITTEN | MockBukkit lifecycle/command/config/enchanting; **not executed** |
-| Database tests | WRITTEN | Real SQLite file, migrations, constraints, executor; **not executed** |
-| Statistical tests | WRITTEN | 1,000,000-iteration chi-square suite; **not executed** |
-| GitHub Actions | WRITTEN | `ci.yml`, `release.yml`; **never run** |
+| Unit tests | CI VERIFIED | 127 test methods across 14 classes, all passing |
+| Integration tests | CI VERIFIED | MockBukkit lifecycle/command/config/enchanting, all passing |
+| Database tests | CI VERIFIED | Real SQLite file, migrations, constraints, executor, all passing |
+| Statistical tests | CI VERIFIED | 1,000,000-iteration chi-square suite, all passing |
+| GitHub Actions | CI VERIFIED | `ci.yml` green on `b98b668`; `release.yml` written, not yet exercised |
 | Documentation | IMPLEMENTED | README, AGENTS, INIT, docs/*.md, LICENSE, THIRD_PARTY_NOTICES |
 
 Allowed statuses: NOT STARTED · IN PROGRESS · IMPLEMENTED · CI VERIFIED · BLOCKED · NEEDS REVIEW.
-Nothing is `CI VERIFIED` yet — that label requires a linked, successful Actions run.
+`CI VERIFIED` here means the module was compiled, tested and packaged by the successful Actions run
+[41083616077](https://github.com/vivo6810/NexusEnchants/actions/runs/41083616077) on commit
+`b98b668`. Behaviour on a live Paper server is still unverified (see `docs/DEVELOPMENT_STATUS.md`).
 
 ---
 
 ## F. Current development state
 
-- **Last completed phase:** Phase 8 (implementation, tests, docs and workflows written).
-- **Current active task:** none in progress; awaiting the first GitHub Actions run.
+- **Last completed phase:** Phase 9 (CI verification — compile, test, checkstyle, statistical suite
+  and jar packaging all green).
+- **Current active task:** none in progress.
 - **Files created (this session):** the entire repository (see `docs/DEVELOPMENT_STATUS.md` for the
   full inventory): Gradle build + wrapper, `config/checkstyle/checkstyle.xml`, 78 main sources,
   14 test sources, 7 YAML resources, 8 migration scripts, 2 workflows, README/AGENTS/INIT,
@@ -241,11 +244,19 @@ Nothing is `CI VERIFIED` yet — that label requires a linked, successful Action
   - `VillagerTradeManager` — profession key resolved through `Keyed` instead of assuming `getKey()`.
   - `RarityCommands`, `PricingCommands`, `HelpCommand`, `DiagnosticsCommands`, `DatabaseManager` —
     replaced inline fully-qualified names with imports.
-- **Known bugs:** none known; nothing has been compiled, so no defect can be ruled out.
+- **CI fixes made in phase 9:**
+  - `AsyncDatabaseExecutor` — SQL tasks use `submitSql`; four call sites in `PluginBootstrap`,
+    `VillagerTradeManager` had passed throwing lambdas to the plain `submit`.
+  - `NexusEnchants` — no longer `final`; MockBukkit loads a plugin by generating a subclass.
+  - `VillagerRarityManager.buildTable` — returns an empty table when the system is inactive.
+  - Tests — canonical keys (`minecraft:mending`), the real 70-point weight total, the enchanting
+    exclusion list, and a raw-YAML permission check instead of Bukkit's path-split sections.
+- **Known bugs:** none reported by CI. Behaviour on a real server is unverified.
 - **Unresolved questions:** none blocking. Open verification items are listed in
   `docs/DEVELOPMENT_STATUS.md` § "Outstanding work".
-- **Next recommended task:** push to GitHub, let `ci.yml` run, then fix whatever the compiler and
-  tests report and mark modules `CI VERIFIED` with the run URL.
+- **Next recommended task:** verify the 120 non-statistical + 7 statistical tests continue to pass on
+  real-server behaviour (merchant payment, preview accuracy, restart persistence) per
+  `docs/TESTING.md` § 6, then tag a release so `release.yml` runs.
 
 ---
 
@@ -260,10 +271,12 @@ Nothing is `CI VERIFIED` yet — that label requires a linked, successful Action
 | Database tests | 20 (`SQLiteProviderTest` 8, `MigrationManagerTest` 6, `AsyncDatabaseExecutorTest` 6) |
 | MockBukkit integration tests | 31 (`PluginLifecycleTest` 10, `ConfigManagerTest` 9, `EnchantingSelectionTest` 12) … plus 12 resource-validation tests |
 | Resource validation tests | 12 (`ResourceIntegrityTest`) |
-| Tests executed | **0** — no build has been run anywhere yet |
-| CI run URL | none |
-| Failed tests | unknown |
-| Skipped tests | unknown |
+| Tests executed | 127 — 120 in `test`, 7 in `statisticalTest` |
+| CI run URL | <https://github.com/vivo6810/NexusEnchants/actions/runs/41083616077> (commit `b98b668`) |
+| Failed tests | 0 |
+| Skipped tests | 0 |
+| Checkstyle | clean (`maxWarnings = 0`) |
+| Artifact | `NexusEnchants` jar (16.9 MB) uploaded by the run |
 
 Never invent test results. Update this table only from an actual Actions run.
 
@@ -325,6 +338,10 @@ Never invent test results. Update this table only from an actual Actions run.
 | 2026-10-30 | Phase 1–6 — configuration, pricing, discounts, villager rarity + trade integration, enchanting, sources, database layer, migrations, repositories, commands, permissions, diagnostics, public API | 78 main sources, 7 YAML resources, 8 migrations | — | not compiled |
 | 2026-10-30 | Phase 7 — anti-exploit guards (restock re-pricing, duplicate-recipe prevention, price floor, inventory-safe payments), thread-safety (bounded async executor, main-thread hand-back), database reliability (bounded queue, graceful degradation) | `VillagerTradeManager`, `AsyncDatabaseExecutor`, `DatabaseManager` | — | not compiled |
 | 2026-10-30 | Phase 8 — static consistency audit (imports, cross-package references, nested types), 127 tests written, documentation and workflows written | `src/test/**` (14), `README.md`, `AGENTS.md`, `INIT.md`, `docs/**`, `.github/workflows/*.yml` | 127 | awaiting first CI run |
+| 2026-10-30 | Phase 9a — first CI run failed in `compileJava`: ambiguous `submit` overload, `ConfigManager` catching checked exceptions, missing `DatabaseManager.type()`. SQL task overload renamed to `submitSql`, YAML parsed through `loadFromString`, configured type exposed | `AsyncDatabaseExecutor`, `AsyncDatabaseExecutorTest`, `ConfigManager`, `DatabaseManager` | 127 | run 41074773260 still failed |
+| 2026-10-30 | Phase 9b — CI reported throwing lambdas bound to `submit(String, Runnable)`; four call sites moved to `submitSql` | `PluginBootstrap`, `VillagerTradeManager` | 127 | compiled, 39 tests failed |
+| 2026-10-30 | Phase 9c — MockBukkit could not subclass the final plugin class; plugin class opened up, discount and permission expectations corrected | `NexusEnchants`, `ResourceIntegrityTest`, `PriceMathTest` | 127 | 8 tests failed |
+| 2026-10-30 | Phase 9d — remaining tests aligned with the documented contract: canonical keys, 70-point weight total, exclusion precedence, raw-YAML permissions; `buildTable` honours an inactive system | `VillagerRarityManager`, `ConfigManagerTest`, `VillagerRarityManagerTest`, `ResourceIntegrityTest` | 127 | **CI green: run 41083616077, commit `b98b668`** |
 
 ---
 

@@ -1,20 +1,22 @@
 # Development status
 
-Last updated: 2026-10-30 — phase 8 (final verification preparation).
+Last updated: 2026-10-30 — phase 9 (CI verified).
 
-**No compilation, test run or packaging has been performed. Nothing is CI verified.**
-The first build is performed by `.github/workflows/ci.yml` after the repository is pushed.
+**Compiled, tested and packaged by GitHub Actions run
+[41083616077](https://github.com/vivo6810/NexusEnchants/actions/runs/41083616077) on commit
+`b98b668`: 127 tests passed, checkstyle clean, plugin jar uploaded.** Nothing was compiled locally
+(project rule). Live-server behaviour is still unverified — see § 5.
 
 ## 1. Status summary
 
 | Area | Status |
 |---|---|
-| Source code | IMPLEMENTED (78 files), **not compiled** |
-| Automated tests | WRITTEN (127 methods, 14 classes), **not executed** |
-| Configuration resources | IMPLEMENTED (7 files), parsed by `ResourceIntegrityTest` at CI time |
-| Migrations | IMPLEMENTED (V001–V004 × 2 dialects), applied only in tests |
+| Source code | CI VERIFIED (78 files compiled) |
+| Automated tests | CI VERIFIED (127 methods, 14 classes, 0 failures) |
+| Configuration resources | CI VERIFIED (7 files, parsed by `ResourceIntegrityTest`) |
+| Migrations | CI VERIFIED (V001–V004 × 2 dialects, applied in tests) |
 | Documentation | IMPLEMENTED |
-| CI/CD workflows | WRITTEN, **never run** |
+| CI/CD workflows | `ci.yml` CI VERIFIED; `release.yml` not yet exercised (no tag pushed) |
 
 ## 2. Implemented functionality
 
@@ -58,26 +60,34 @@ Docs         INIT.md, AGENTS.md, README.md, docs/*.md (10), LICENSE, THIRD_PARTY
 
 ## 4. Tests written vs executed
 
-| | Written | Executed |
-|---|---|---|
-| Unit tests | 51 | 0 |
-| Database tests | 20 | 0 |
-| MockBukkit integration tests | 37 | 0 |
-| Resource validation tests | 12 | 0 |
-| Statistical tests | 7 | 0 |
-| **Total** | **127** | **0** |
+| | Written | Executed | Passing |
+|---|---|---|---|
+| Unit tests | 51 | 51 | 51 |
+| Database tests | 20 | 20 | 20 |
+| MockBukkit integration tests | 37 | 37 | 37 |
+| Resource validation tests | 12 | 12 | 12 |
+| Statistical tests | 7 | 7 | 7 |
+| **Total** | **127** | **127** | **127** |
+
+All 127 ran in run 41083616077; the 120 non-statistical tests in `:test`, the 7 statistical tests in
+`:statisticalTest`, 0 failures and 0 skipped.
 
 ## 5. Outstanding work
 
-Verification (must be done by GitHub Actions / a real server):
+Verification completed by CI:
 
-1. **Compile** the project (first CI run) and fix any compiler error.
-2. **Run** the full suite; address failures, especially MockBukkit API drift.
-3. **Confirm** `checkstyle` passes with `maxWarnings=0`.
-4. **Confirm** the shaded jar contains relocated HikariCP, the JDBC drivers and `plugin.yml` with the
-   expanded version.
-5. **Real-server verification** of merchant payment, previews, loot/fishing and restart persistence
+1. ~~Compile the project and fix compiler errors.~~ Done across runs 41074773260, 41079476259 and
+   41083616077 (stale overloads, `submitSql` call sites, final plugin class).
+2. ~~Run the full suite; address failures.~~ Done — 39 then 8 then 0 failing tests.
+3. ~~Confirm checkstyle passes with `maxWarnings=0`.~~ Passing.
+4. ~~Confirm the shaded jar and upload it.~~ `NexusEnchants` jar (16.9 MB) uploaded by the run.
+
+Verification that only a real server can provide:
+
+5. **Live-server verification** of merchant payment, previews, loot/fishing and restart persistence
    (procedure in `docs/TESTING.md` §6) — cannot be automated here.
+6. **Inspect the shaded jar** once on a Paper 26.3 server: relocated HikariCP, `plugin.yml` version,
+   migration application on a fresh data folder.
 
 Deliberately deferred:
 
@@ -99,5 +109,6 @@ Deliberately deferred:
 
 ## 7. Next recommended task
 
-Push the repository to GitHub, let `ci.yml` run, then fix the reported compiler/test failures and
-record the run URL in `INIT.md` § G, promoting modules to `CI VERIFIED`.
+Run the plugin on a Paper 26.3 test server: check `/vbe diagnostics` on a fresh install, buy a 70-
+emerald Mending book (split payment), confirm a restart keeps prices, and push a `v0.1.0` tag so
+`release.yml` produces its first release.

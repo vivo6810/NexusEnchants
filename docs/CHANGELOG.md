@@ -4,8 +4,10 @@ All notable changes to NexusEnchants are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> Entries below describe **written** functionality. Nothing has been compiled or executed yet;
-> verification status is tracked in `docs/DEVELOPMENT_STATUS.md`.
+> Entries below describe released functionality. The build, the full test suite and the shaded jar
+> are verified by GitHub Actions (run
+> [41083616077](https://github.com/vivo6810/NexusEnchants/actions/runs/41083616077));
+> live-server verification is tracked in `docs/DEVELOPMENT_STATUS.md`.
 
 ## [Unreleased]
 
@@ -38,6 +40,11 @@ All notable changes to NexusEnchants are documented here. The format follows
 - **Diagnostics** — configuration issues, degraded services, executor counters, unsupported sources.
 - **Testing** — 127 test methods: unit, database (real SQLite), MockBukkit integration, resource
   validation and a 1,000,000-iteration statistical suite.
+
+### Fixed
+
+- A librarian rarity system that is set to `selection-mode: DISABLED` no longer exposes a weighted
+  table; probability queries and command output report no selectable enchantments.
 - **CI/CD** — `ci.yml` (wrapper validation, Java 25, `clean check build`, artifact upload) and
   `release.yml` (tag-driven release with the shaded jar attached).
 - **Documentation** — `README.md`, `AGENTS.md`, `INIT.md`, `docs/ARCHITECTURE.md`,
