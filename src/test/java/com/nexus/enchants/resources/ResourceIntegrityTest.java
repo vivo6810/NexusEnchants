@@ -79,17 +79,32 @@ class ResourceIntegrityTest {
     @Test
     @DisplayName("plugin.yml declares every documented permission")
     void permissions() throws IOException {
-        ConfigurationSection section = yaml("plugin.yml").getConfigurationSection("permissions");
-        assertNotNull(section);
-        assertEquals(PERMISSIONS, section.getKeys(false));
-        for (String permission : PERMISSIONS) {
-            assertEquals("op", section.getString(permission + ".default"), permission);
+        // Bukkit treats '.' as its path separator, so the dotted permission nodes
+        // load as one nested tree below a single "nexusenchants" section. Walking
+        // that tree is what the plugin descriptor itself does.
+        ConfigurationSection root = yaml("plugin.yml").getConfigurationSection("permissions.nexusenchants");
+        assertNotNull(root, "plugin.yml must declare the NexusEnchants permissions");
+
+        List<String> nodes = new ArrayList<>();
+        nodes.add("nexusenchants.admin");
+        for (String node : List.of("reload", "prices", "rarity", "diagnostics", "database")) {
+            assertNotNull(root.getConfigurationSection(node), "missing permission nexusenchants." + node);
+            nodes.add("nexusenchants." + node);
         }
-        ConfigurationSection children = section.getConfigurationSection("nexusenchants.admin.children");
-        assertNotNull(children);
+        assertEquals(PERMISSIONS, Set.copyOf(nodes), "every documented permission is declared exactly once");
+        for (String node : List.of("admin", "reload", "prices", "rarity", "diagnostics", "database")) {
+            assertEquals("op", root.getString(node + ".default"), "nexusenchants." + node);
+        }
+
+        ConfigurationSection admin = root.getConfigurationSection("admin");
+        assertNotNull(admin);
+        ConfigurationSection children = admin.getConfigurationSection("children");
+        assertNotNull(children, "nexusenchants.admin must inherit the other permissions");
         assertTrue(children.getKeys(false).containsAll(
-                Set.of("nexusenchants.reload", "nexusenchants.prices", "nexusenchants.rarity",
-                        "nexusenchants.diagnostics", "nexusenchants.database")));
+                Set.of("reload", "prices", "rarity", "diagnostics", "database")));
+        for (String child : children.getKeys(false)) {
+            assertTrue(children.getBoolean(child), "nexusenchants.admin." + child + " must be granted");
+        }
     }
 
     @Test

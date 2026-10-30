@@ -53,7 +53,8 @@ class PriceMathTest {
     @Test
     @DisplayName("A discount can never exceed the base price")
     void discountNeverExceedsBase() {
-        assertEquals(0, PriceMath.discountAmount(5, 1000));
+        // A 1000% discount is capped at the whole price, which leaves a price of 0.
+        assertEquals(5, PriceMath.discountAmount(5, 1000));
         assertEquals(0, PriceMath.applyDiscount(5, 1000, 0));
         assertEquals(0, PriceMath.discountAmount(0, 50));
         assertEquals(0, PriceMath.discountAmount(-10, 50));

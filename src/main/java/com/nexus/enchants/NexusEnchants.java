@@ -10,8 +10,12 @@ import org.bukkit.plugin.java.JavaPlugin;
  * <p>The plugin class only owns the life cycle. Every service, listener, command
  * and task is created by {@link PluginBootstrap}, which also guarantees a clean
  * shutdown if startup fails halfway through.</p>
+ *
+ * <p>The class is deliberately not final: MockBukkit loads a plugin by
+ * generating a subclass, and the integration tests use the real entry point
+ * rather than a stand-in.</p>
  */
-public final class NexusEnchants extends JavaPlugin {
+public class NexusEnchants extends JavaPlugin {
 
     private PluginBootstrap bootstrap;
 
