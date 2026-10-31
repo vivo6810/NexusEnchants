@@ -32,7 +32,7 @@ class RarityStatisticsStoreTest {
         assertEquals(10L, store.recordedSinceFlush());
 
         Map<StatisticKey, Long> drained = store.drain();
-        assertEquals(8L, drained.get(VILLAGER_MENDING));
+        assertEquals(7L, drained.get(VILLAGER_MENDING));
         assertEquals(2L, drained.get(VILLAGER_UNBREAKING));
         assertEquals(1L, drained.get(TABLE_THORNS));
     }
