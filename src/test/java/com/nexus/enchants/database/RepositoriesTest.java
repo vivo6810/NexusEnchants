@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.nexus.enchants.config.DatabaseConfig;
+import com.nexus.enchants.config.DatabaseType;
 import com.nexus.enchants.config.PluginSettings;
 import com.nexus.enchants.database.repositories.AuditRecord;
 import com.nexus.enchants.storage.StatisticKey;
