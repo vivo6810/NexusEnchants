@@ -72,10 +72,12 @@ class TradeCacheTest {
 
         List<VillagerRecord> snapshot = List.copyOf(cache.snapshot());
         assertEquals(2, snapshot.size());
+        // The snapshot itself is an immutable collection:
         assertThrows(UnsupportedOperationException.class,
-                () -> cache.snapshot().stream().toList().add(villager(UUID.randomUUID())));
-        // Mutating the returned collection cannot affect the cache itself:
-        cache.snapshot().stream().toList().clear();
+                () -> snapshot.add(villager(UUID.randomUUID())));
+        // Clearing a mutable copy cannot affect the cache either:
+        List<VillagerRecord> mutableCopy = new java.util.ArrayList<>(cache.snapshot());
+        mutableCopy.clear();
         assertEquals(2, cache.size());
 
         cache.remove(first);
