@@ -73,7 +73,7 @@ class ResourceIntegrityTest {
         YamlConfiguration yml = yaml("plugin.yml");
         assertEquals("NexusEnchants", yml.getString("name"));
         assertEquals("com.nexus.enchants.NexusEnchants", yml.getString("main"));
-        assertEquals("26.3", yml.getString("api-version"));
+        assertEquals("26.2", yml.getString("api-version"));
         assertTrue(yml.isConfigurationSection("commands"), "the vbe command must be declared");
         assertTrue(yml.isConfigurationSection("commands.vbe"));
         assertEquals("/vbe help", yml.getString("commands.vbe.usage"));

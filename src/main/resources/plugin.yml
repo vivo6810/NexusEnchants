@@ -1,7 +1,7 @@
 name: NexusEnchants
 version: '${version}'
 main: com.nexus.enchants.NexusEnchants
-api-version: '26.3'
+api-version: '26.2'
 description: Full control over how enchantments are obtained, priced and distributed.
 authors: [NexusEnchants]
 website: https://github.com/nexusenchants/NexusEnchants

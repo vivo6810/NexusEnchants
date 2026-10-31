@@ -11,6 +11,30 @@ All notable changes to NexusEnchants are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed (2026-10-31 compatibility and distribution pass)
+
+- **`api-version` lowered to `26.2`** so the same jar loads on Purpur/Paper 26.2 and later 26.x
+  servers; the API the code compiles against is unchanged (ADR-014).
+- **Single shaded jar** — the internal `-plain` jar is no longer produced, the CI artifact contains
+  exactly the shaded plugin jar, and the release workflow can no longer pick a dependency-less jar
+  by accident (the release's `find` previously tended to select `-plain.jar` first).
+- **Jar size reduced from ~17 MB to ~4–5 MB** — unused sqlite-jdbc native platforms (FreeBSD,
+  musl, 32-bit ARM/Windows, riscv64, ppc64) and the unused MySQL X-DevAPI/protobuf payload are
+  excluded; CI now fails above 7 MB (ADR-013).
+- GitHub Actions updated off the Node.js 20 runtime deprecation: `checkout@v7`, `setup-java@v6`,
+  `setup-gradle@v6` (which validates wrapper checksums automatically, replacing the separate
+  wrapper-validation action), `upload-artifact@v7`, `action-gh-release@v3`, runner pinned to
+  `ubuntu-24.04`.
+
+### Added (2026-10-31 review pass)
+
+- New tests raising direct coverage to 18 classes: `RepositoriesTest` (real temporary SQLite —
+  villager upsert semantics incl. registration-timestamp preservation, trade key-unique rewrites,
+  audit retention, statistics accumulation), `TradeCacheTest`, `RarityStatisticsStoreTest` and
+  `ConfigValidatorTest` (registry-free helper contract).
+- Locale-independent journal-mode normalisation (`ConfigValidator`).
+
+
 ### Added
 
 - **Villager book pricing** — per-enchantment, per-level prices with configurable fallback,

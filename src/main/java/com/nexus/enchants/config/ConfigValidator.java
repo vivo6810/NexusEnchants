@@ -10,6 +10,7 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -154,7 +155,7 @@ public final class ConfigValidator {
                         "the example username is still configured"));
             }
         }
-        String journalMode = database.journalMode() == null ? "" : database.journalMode().toUpperCase();
+        String journalMode = database.journalMode() == null ? "" : database.journalMode().toUpperCase(Locale.ROOT);
         if (!Set.of("WAL", "DELETE", "TRUNCATE", "PERSIST", "MEMORY", "OFF").contains(journalMode)) {
             issues.add(error("config.yml", "database.sqlite.options.journal-mode",
                     "expected one of WAL, DELETE, TRUNCATE, PERSIST, MEMORY, OFF"));

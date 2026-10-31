@@ -82,14 +82,11 @@ processResources {
 }
 
 jar {
-    // The shaded jar is the distributed artifact; the thin jar is internal only.
-    archiveClassifier = 'plain'
-    manifest {
-        attributes(
-            'Implementation-Title': 'NexusEnchants',
-            'Implementation-Version': project.version
-        )
-    }
+    // The shaded jar is the only distributed artifact. Disable the thin jar so
+    // build/libs can never contain two candidate jars - a '-plain' jar without
+    // the shaded JDBC/Hikari dependencies would crash on a Paper server, and
+    // the release workflow must never be able to pick it by accident.
+    enabled = false
 }
 
 tasks.named('shadowJar', ShadowJar) {
@@ -100,6 +97,29 @@ tasks.named('shadowJar', ShadowJar) {
     // META-INF/services/java.sql.Driver descriptors must keep working.
     relocate('com.zaxxer.hikari', 'com.nexus.enchants.libs.hikari', {} as Action)
     mergeServiceFiles('META-INF/services')
+    // Native-library trimming: sqlite-jdbc bundles a ~1 MB native library per
+    // OS/arch pair, including platforms no Minecraft server runs on. Keep the
+    // mainstream server platforms (Linux x86_64 + aarch64, Windows x86_64,
+    // macOS x86_64 + aarch64); drop the rest. FreeBSD and musl hosts must use
+    // the MySQL database or provide the sqlite driver themselves - see
+    // docs/DECISIONS.md ADR-013.
+    exclude 'org/sqlite/native/FreeBSD/**'
+    exclude 'org/sqlite/native/Linux-Musl/**'
+    exclude 'org/sqlite/native/Linux/x86/**'
+    exclude 'org/sqlite/native/Linux/arm/**'
+    exclude 'org/sqlite/native/Linux/armv6/**'
+    exclude 'org/sqlite/native/Linux/armv7/**'
+    exclude 'org/sqlite/native/Linux/ppc64/**'
+    exclude 'org/sqlite/native/Linux/riscv64/**'
+    exclude 'org/sqlite/native/Windows/x86/**'
+    exclude 'org/sqlite/native/Windows/aarch64/**'
+    exclude 'org/sqlite/native/Windows/armv7/**'
+    // X-DevAPI / X-protocol payload of mysql-connector-j. The plugin always
+    // speaks the classic JDBC protocol; the protobuf schemas are unused.
+    exclude 'com/google/protobuf/**'
+    exclude 'com/mysql/cj/x/**'
+    exclude 'com/mysql/cj/protocol/x/**'
+    exclude 'com/mysql/cj/xdevapi/**'
     exclude 'META-INF/*.SF'
     exclude 'META-INF/*.DSA'
     exclude 'META-INF/*.RSA'

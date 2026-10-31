@@ -264,11 +264,11 @@ Allowed statuses: NOT STARTED · IN PROGRESS · IMPLEMENTED · CI VERIFIED · BL
 
 | Metric | Value |
 |---|---|
-| Test classes | 14 |
-| Test methods | 127 |
+| Test classes | 18 |
+| Test methods | 149 |
 | Unit tests (pure logic) | 51 (`PriceMath` 7, `PriceCalculator` 13, `DiscountManager` 12, `WeightedTable` 12, `PaymentPlan` 7) |
 | Statistical tests | 7 (`StatisticalDistributionTest`, `@Tag("statistical")`, 1,000,000 iterations each) |
-| Database tests | 20 (`SQLiteProviderTest` 8, `MigrationManagerTest` 6, `AsyncDatabaseExecutorTest` 6) |
+| Database tests | 26 (`SQLiteProviderTest` 8, `MigrationManagerTest` 6, `AsyncDatabaseExecutorTest` 6, `RepositoriesTest` 6) |
 | MockBukkit integration tests | 31 (`PluginLifecycleTest` 10, `ConfigManagerTest` 9, `EnchantingSelectionTest` 12) … plus 12 resource-validation tests |
 | Resource validation tests | 12 (`ResourceIntegrityTest`) |
 | Tests executed | 127 — 120 in `test`, 7 in `statisticalTest` |
@@ -331,6 +331,30 @@ Never invent test results. Update this table only from an actual Actions run.
 ---
 
 ## J. Change history
+
+**2026-10-31 — compatibility, distribution and review pass (compilation NOT run locally; verified by
+the review-pass Actions run):**
+- Fixed the jar the server rejected: `api-version` lowered to `26.2` (ADR-014); Purpur 26.2 loads the
+  plugin while the build API stays 26.3 (`plugin.yml`, `ResourceIntegrityTest`).
+- `build.gradle`: disabled the `-plain` jar, excluded unused sqlite-jdbc native platforms and the
+  unused MySQL X-DevAPI/protobuf payload; jar drops from ~17 MB to ~4-5 MB (ADR-013).
+- `ci.yml`/`release.yml`: actions bumped to node24 runtimes (`checkout@v7`, `setup-java@v6`,
+  `setup-gradle@v6` with automatic wrapper validation, `upload-artifact@v7`,
+  `softprops/action-gh-release@v3`), runner pinned to `ubuntu-24.04`; the separate
+  `wrapper-validation@v4` step was removed (function folded into `setup-gradle@v6`); CI now
+  verifies exactly one non-plain jar exists, contains `plugin.yml`, and stays under 7 MB.
+- Whole-codebase static review: no empty catch blocks, no unused private members, no unused imports,
+  no dead public classes, no `System.out`/`printStackTrace`; `ConfigValidator` now normalises the
+  journal mode with `Locale.ROOT`.
+- New tests: `RepositoriesTest` (first direct persistence coverage, real temporary SQLite),
+  `TradeCacheTest`, `RarityStatisticsStoreTest`, `ConfigValidatorTest` (+22 test methods, 18 classes
+  total). Careful assertion review against the real SQL semantics (upsert clauses, strict
+  `created_at < cutoff`).
+- Files changed: `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `build.gradle`,
+  `src/main/resources/plugin.yml`, `ConfigValidator.java`, the four new test classes; docs:
+  `DECISIONS.md` (ADR-013/014), `CHANGELOG.md`, `INIT.md`, `DEVELOPMENT_STATUS.md`.
+- Deployment note: drop the old jar from `plugins/` and replace it with the new shaded
+  `NexusEnchants-0.1.0.jar`; `-plain` jars never need to be installed.
 
 | Date | Work performed | Files | Tests added | Remaining issues |
 |---|---|---|---|---|

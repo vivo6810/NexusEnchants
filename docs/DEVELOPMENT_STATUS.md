@@ -112,3 +112,11 @@ Deliberately deferred:
 Run the plugin on a Paper 26.3 test server: check `/vbe diagnostics` on a fresh install, buy a 70-
 emerald Mending book (split payment), confirm a restart keeps prices, and push a `v0.1.0` tag so
 `release.yml` produces its first release.
+
+---
+
+## Outstanding work
+
+- **Verified on a live server (2026-10-31 report):** the first shaded jar could not load on
+  Purpur 26.2 because `plugin.yml` said `26.3`; fixed by ADR-014. Replace the installed jar with the
+  new shaded build and retry (`api-version: '26.2'`, single jar, ~4 MB, ADR-013).

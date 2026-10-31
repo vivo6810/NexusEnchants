@@ -26,27 +26,27 @@ env:
 jobs:
   verify:
     name: Build, test and package
-    runs-on: ubuntu-latest
+    # Pinned so the Ubuntu 26 migration of `ubuntu-latest` cannot change this job
+    # without review.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v4
-
+      # setup-gradle v6 validates every gradle-wrapper.jar checksum against the
+      # official SHA-256 list automatically, so no separate wrapper-validation
+      # step is needed.
       - name: Setup Java 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '25'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
-          # Fails the job on a Gradle deprecation that becomes an error in the next major.
-          validate-wrappers: true
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Verify Java toolchain
@@ -72,7 +72,7 @@ jobs:
 
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports
           path: |
@@ -83,7 +83,7 @@ jobs:
 
       - name: Upload plugin jar
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: NexusEnchants
           # Only the shaded plugin jar; the plain jar and reports stay internal.
@@ -96,4 +96,22 @@ jobs:
         run: |
           set -euo pipefail
           ls -l build/libs
-          test -n "$(find build/libs -maxdepth 1 -name 'NexusEnchants-*.jar' -print -quit)"
+          jar_file="$(find build/libs -maxdepth 1 -name 'NexusEnchants-*.jar' ! -name '*-plain.jar' -print -quit)"
+          if [ -z "$jar_file" ]; then
+            echo "::error::No shaded NexusEnchants jar was produced"
+            exit 1
+          fi
+          if unzip -l "$jar_file" plugin.yml >/dev/null 2>&1; then echo "plugin.yml present in $jar_file"; else echo "::error::$jar_file lacks plugin.yml"; exit 1; fi
+          # Keep the distribution small; see docs/DECISIONS.md ADR-013.
+          size=$(stat -c%s "$jar_file")
+          mb=$((size / 1024 / 1024))
+          echo "Shaded jar: $jar_file = $size bytes ($mb MB)"
+          if [ "$mb" -gt 7 ]; then
+            echo "::error::The shaded jar grew past 7 MB; the native/protobuf exclusions degraded"
+            exit 1
+          fi
+          # The plain jar must not exist: the shaded jar is the only artifact.
+          if find build/libs -maxdepth 1 -name '*-plain.jar' | grep -q .; then
+            echo "::error::A -plain jar leaked into build/libs"
+            exit 1
+          fi

@@ -169,3 +169,36 @@ the verification from CI.
 
 **Consequences.** Changing a shipped weight requires updating the expected values in the statistical
 suite and the resource integrity test in the same commit.
+
+---
+
+## ADR-013 — The shaded jar excludes unused SQLite natives and MySQL X-protocol
+
+**Decision.** The shadow jar keeps sqlite-jdbc native libraries only for Linux (x86_64, aarch64),
+Windows x86_64 and macOS (x86_64, aarch64). The mysql-connector-j X-DevAPI / X-protocol classes and
+their protobuf dependency are excluded entirely. CI fails the build if the jar exceeds 7 MB.
+
+**Reason.** With every platform bundled the jar was ~17 MB, several times what a comparable plugin
+ships; sqlite-jdbc alone carried ~1 MB per OS/arch pair for platforms no Minecraft server runs on
+(FreeBSD, musl, 32-bit ARM, riscv, ppc64). The plugin builds its own JDBC URLs and only ever uses the
+classic MySQL protocol, so the X-DevAPI payload and protobuf are unreachable code.
+
+**Consequences.** A plugin on a FreeBSD, musl or 32-bit host cannot use the bundled SQLite driver; it
+must configure MySQL, or supply its own `org.xerial:sqlite-jdbc` jar — the database failure path
+already degrades to a logged, non-fatal state instead of crashing. The 7 MB CI gate documents the
+expected distribution size and catches accidental re-inclusion.
+
+---
+
+## ADR-014 — The plugin declares `api-version: 26.2`
+
+**Decision.** `plugin.yml` declares `api-version: '26.2'` while the code still compiles against the
+pinned Paper 26.3 API build.
+
+**Reason.** Bukkit rejects a plugin whose descriptor advertises an API newer than the running server,
+so a jar built for 26.3 could not load on a Purpur 26.2 server. The `26.3` build API is strictly
+backwards compatible from the plugin's point of view; lower the declared minimum, not the compiled
+against-API, so one jar covers both.
+
+**Consequences.** A feature requiring a 26.3-only API call would fail on a 26.2 server; such calls
+must be guarded before use and documented in `docs/API_COMPATIBILITY.md`.

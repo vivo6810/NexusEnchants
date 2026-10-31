@@ -27,7 +27,9 @@ env:
 jobs:
   release:
     name: Build and publish release
-    runs-on: ubuntu-latest
+    # Pinned so the Ubuntu 26 migration of `ubuntu-latest` cannot change this
+    # job without review.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
@@ -42,24 +44,22 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.tag.outputs.name }}
           fetch-depth: 0
 
-      - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v4
-
+      # setup-gradle v6 validates every gradle-wrapper.jar checksum against the
+      # official SHA-256 list automatically, so no separate wrapper-validation
+      # step is needed.
       - name: Setup Java 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '25'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          validate-wrappers: true
+        uses: gradle/actions/setup-gradle@v6
 
       # A release is never built from a revision that has not passed the full suite.
       - name: Run the complete test suite
@@ -73,7 +73,7 @@ jobs:
       - name: Verify the release artifact
         run: |
           set -euo pipefail
-          jar_file="$(find build/libs -maxdepth 1 -name "NexusEnchants-*.jar" -print -quit)"
+          jar_file="$(find build/libs -maxdepth 1 -name 'NexusEnchants-*.jar' ! -name '*-plain.jar' -print -quit)"
           if [ -z "$jar_file" ]; then
             echo "::error::No NexusEnchants jar was produced"
             exit 1
@@ -105,7 +105,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.tag.outputs.name }}
           name: NexusEnchants ${{ steps.tag.outputs.name }}
